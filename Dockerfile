@@ -66,7 +66,7 @@ RUN composer install --no-interaction --optimize-autoloader --no-dev --no-script
     && env SESSION_DRIVER=file CACHE_STORE=file QUEUE_CONNECTION=sync \
         php artisan key:generate --force --no-interaction \
     && env SESSION_DRIVER=file CACHE_STORE=file QUEUE_CONNECTION=sync \
-        php artisan package:discover --ansi --force --no-interaction \
+        php artisan package:discover --ansi --no-interaction \
     && env SESSION_DRIVER=file CACHE_STORE=file QUEUE_CONNECTION=sync \
         php artisan config:clear --no-interaction
 RUN npm install
