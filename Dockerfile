@@ -54,12 +54,21 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Install dependencies and build assets
-# Install without scripts first (post-autoload-dump runs artisan and fails without .env / APP_KEY).
+#
+# Analysis (exit code 2 on this RUN):
+# - .env.example sets SESSION_DRIVER/CACHE_STORE/QUEUE_CONNECTION=database. During `docker build`
+#   there is no MySQL; bootstrapping for `package:discover` / `config:clear` can hit the DB layer and fail.
+# - Composer is run with --no-scripts so post-autoload-dump does not run before .env + APP_KEY exist.
+# - For Artisan only, prefix with env(...) so those vars override .env for that process (Dotenv does not
+#   overwrite existing environment variables). The on-disk .env stays suitable for runtime with MySQL.
 RUN composer install --no-interaction --optimize-autoloader --no-dev --no-scripts \
     && ([ -f .env ] || cp .env.example .env) \
-    && php artisan key:generate --force --no-interaction \
-    && php artisan package:discover --ansi --force --no-interaction \
-    && php artisan config:clear --no-interaction
+    && env SESSION_DRIVER=file CACHE_STORE=file QUEUE_CONNECTION=sync \
+        php artisan key:generate --force --no-interaction \
+    && env SESSION_DRIVER=file CACHE_STORE=file QUEUE_CONNECTION=sync \
+        php artisan package:discover --ansi --force --no-interaction \
+    && env SESSION_DRIVER=file CACHE_STORE=file QUEUE_CONNECTION=sync \
+        php artisan config:clear --no-interaction
 RUN npm install
 RUN npm run build
 
