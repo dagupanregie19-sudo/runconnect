@@ -6,21 +6,6 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ command }) => {
     const config = {
         plugins: [
-        {
-            name: 'mc-tunnel',
-            config: () => ({
-                server: {
-                    host: '0.0.0.0',
-                    port: 5173,
-                    hmr: {
-                        protocol: 'wss',
-                        host: 'superhuman-finally-sanjuana.ngrok-free.dev',
-                        clientPort: 443,
-                        path: 'vite-hmr'
-                    }
-                }
-            })
-        },
             laravel({
                 input: ['resources/css/app.css', 'resources/js/app.js'],
                 refresh: true,

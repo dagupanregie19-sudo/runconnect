@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libzip-dev \
+    libicu-dev \
     zip \
     unzip \
     git \
@@ -20,8 +22,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions
-RUN docker-php-ext-install pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd
+# Install PHP extensions (intl + xml family needed by PhpSpreadsheet / Flysystem; zip for Composer dist installs)
+RUN docker-php-ext-install -j"$(nproc)" \
+    pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip intl \
+    dom xml xmlreader xmlwriter simplexml
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -33,6 +37,8 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 
 # Set working directory
 WORKDIR /var/www/html
+
+ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -46,7 +52,12 @@ RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/bootstrap/cache
 
 # Install dependencies and build assets
-RUN composer install --no-interaction --optimize-autoloader --no-dev
+# Install without scripts first (post-autoload-dump runs artisan and fails without .env / APP_KEY).
+RUN composer install --no-interaction --optimize-autoloader --no-dev --no-scripts \
+    && ([ -f .env ] || cp .env.example .env) \
+    && php artisan key:generate --force --no-interaction \
+    && php artisan package:discover --ansi --force --no-interaction \
+    && php artisan config:clear --no-interaction
 RUN npm install
 RUN npm run build
 
