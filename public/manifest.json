@@ -1,0 +1,21 @@
+{
+    "name": "RunConnect",
+    "short_name": "RunConnect",
+    "description": "Your Running Journey Starts Here",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0D1117",
+    "theme_color": "#00D26A",
+    "lang": "en",
+    "scope": "/",
+    "id": "/",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/icon.svg",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}
