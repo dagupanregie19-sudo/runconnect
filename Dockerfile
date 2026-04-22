@@ -76,4 +76,4 @@ RUN npm run build
 EXPOSE 80
 
 # Start Apache with auto migration and seeding
-CMD bash -c "php artisan migrate --force && php artisan db:seed --class=AdminSeeder --force && apache2-foreground"
+CMD bash -c "php artisan migrate:fresh --force && php artisan db:seed --class=AdminSeeder --force && apache2-foreground"
