@@ -22,12 +22,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Install PHP extensions (intl + xml family needed by PhpSpreadsheet / Flysystem; zip for Composer dist installs).
-# dom + xmlreader MUST be in the same RUN: xmlreader compiles against ext/dom/dom_ce.h under /usr/src/php;
-# a separate RUN after dom drops that tree and xmlreader fails with "dom_ce.h: No such file".
-RUN docker-php-ext-install \
-    pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip intl
-RUN MAKEFLAGS=-j1 docker-php-ext-install dom xml simplexml xmlreader xmlwriter
+# PHP extensions: use mlocati installer so dom/xml/xmlreader build order and deps are correct
+# (plain docker-php-ext-install can hit "ext/dom/dom_ce.h: No such file" for xmlreader).
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+RUN install-php-extensions \
+    pdo_mysql pdo_pgsql pgsql mbstring exif pcntl bcmath gd zip intl \
+    dom xml simplexml xmlreader xmlwriter
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
