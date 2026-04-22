@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -9,17 +10,30 @@ class AdminSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * Idempotent for deploys (e.g. Docker CMD / Render): key by username so we never
+     * insert a second row when an admin already exists with username "admin".
      */
     public function run(): void
     {
-        \App\Models\User::updateOrCreate(
-            ['email' => 'admin@example.com'],
+        $username = env('ADMIN_USERNAME', 'admin');
+        $email = env('ADMIN_EMAIL', 'admin@example.com');
+
+        $user = User::firstOrCreate(
+            ['username' => $username],
             [
-                'username' => 'admin',
-                'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+                'email' => $email,
+                'password' => env('ADMIN_PASSWORD', 'password123'),
                 'role' => 'admin',
-                'email_verified_at' => now(),
             ]
         );
+
+        if ($user->wasRecentlyCreated || $user->email_verified_at === null) {
+            $user->forceFill(['email_verified_at' => now()])->save();
+        }
+
+        if ($user->role !== 'admin') {
+            $user->forceFill(['role' => 'admin'])->save();
+        }
     }
 }
