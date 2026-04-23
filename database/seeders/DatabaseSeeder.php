@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             AdminSeeder::class,
+            // Optional demo data (runners, organizers, Tagbina events):
+            // php artisan db:seed --class=SystemDataSeeder
+            SystemDataSeeder::class
         ]);
     }
 }

@@ -80,47 +80,77 @@
     }
     .map-fs-toolbar {
         position: absolute;
-        top: 12px;
-        left: 12px;
-        right: 150px;
+        inset: 0;
         z-index: 10000;
+        pointer-events: none;
+    }
+    .map-fs-toolbar-inner {
         display: flex;
         gap: 8px;
         align-items: stretch;
         pointer-events: none;
     }
-    .map-fs-toolbar .map-fs-input {
+    .map-fs-toolbar-inner > *,
+    .map-fs-toolbar .map-fs-reset {
         pointer-events: auto;
-        min-width: 200px;
-        flex: 1 1 auto;
+    }
+    .map-fs-toolbar .map-fs-input {
         background-color: #ffffff !important;
         color: #212529 !important;
         border: 1px solid #adb5bd !important;
         border-radius: 0.375rem;
         box-shadow: none;
     }
-    .map-fs-toolbar .map-fs-btn {
-        pointer-events: auto;
+    .map-fs-toolbar .map-fs-btn,
+    .map-fs-toolbar .map-fs-reset {
         display: flex;
         align-items: center;
         justify-content: center;
         white-space: nowrap;
         min-width: 42px;
     }
+    @media (min-width: 768px) {
+        .map-fs-toolbar-inner {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            right: 150px;
+            flex-wrap: nowrap;
+        }
+        .map-fs-toolbar-inner .map-fs-input {
+            min-width: 200px;
+            flex: 1 1 auto;
+        }
+        .map-fs-reset {
+            position: absolute;
+            bottom: 42px;
+            right: 12px;
+            z-index: 10001;
+        }
+    }
     @media (max-width: 767.98px) {
         .map-fs-toolbar {
-            top: 62px;
-            left: 12px;
-            right: 12px;
+            display: flex;
             flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 8px;
+            padding: 62px 12px 12px;
+            box-sizing: border-box;
+        }
+        .map-fs-toolbar-inner {
+            display: contents;
         }
         .map-fs-toolbar .map-fs-input {
             min-width: 0;
             flex: 1 1 100%;
         }
-        .map-fs-toolbar .map-fs-btn {
+        .map-fs-toolbar .map-fs-btn,
+        .map-fs-toolbar .map-fs-reset {
             flex: 1 1 calc(25% - 6px);
             min-height: 40px;
+        }
+        .map-fs-reset {
+            position: static;
         }
     }
 
@@ -2703,6 +2733,9 @@ document.addEventListener('DOMContentLoaded', function() {
             searchContainer.id = type + '_fs_search_container';
             searchContainer.className = 'map-fs-toolbar';
 
+            const toolbarInner = document.createElement('div');
+            toolbarInner.className = 'map-fs-toolbar-inner';
+
             const input = document.createElement('input');
             input.type = 'text'; input.className = 'form-control shadow-sm map-fs-input'; input.placeholder = 'Search location...';
             input.onkeypress = (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); searchLocation(type, input.value); } };
@@ -2717,11 +2750,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 return b;
             };
 
-            searchContainer.appendChild(input);
-            searchContainer.appendChild(createFsBtn('<i class="fa-solid fa-magnifying-glass"></i>', 'btn-primary', 'Search', () => searchLocation(type, input.value)));
-            searchContainer.appendChild(createFsBtn('<i class="fa-solid fa-plus"></i>', 'btn-light text-dark', 'Zoom In', () => maps[type].zoomIn()));
-            searchContainer.appendChild(createFsBtn('<i class="fa-solid fa-minus"></i>', 'btn-light text-dark', 'Zoom Out', () => maps[type].zoomOut()));
-            searchContainer.appendChild(createFsBtn('<i class="fa-solid fa-rotate-left"></i>', 'btn-danger text-white', 'Reset Pins', () => { if(confirm('Clear all pins?')) resetMap(type); }));
+            toolbarInner.appendChild(input);
+            toolbarInner.appendChild(createFsBtn('<i class="fa-solid fa-magnifying-glass"></i>', 'btn-primary', 'Search', () => searchLocation(type, input.value)));
+            toolbarInner.appendChild(createFsBtn('<i class="fa-solid fa-plus"></i>', 'btn-light text-dark', 'Zoom In', () => maps[type].zoomIn()));
+            toolbarInner.appendChild(createFsBtn('<i class="fa-solid fa-minus"></i>', 'btn-light text-dark', 'Zoom Out', () => maps[type].zoomOut()));
+            const resetFsBtn = createFsBtn('<i class="fa-solid fa-rotate-left"></i>', 'btn-danger text-white', 'Reset Pins', () => { if(confirm('Clear all pins?')) resetMap(type); });
+            resetFsBtn.classList.add('map-fs-reset');
+            searchContainer.appendChild(toolbarInner);
+            searchContainer.appendChild(resetFsBtn);
             mapDiv.appendChild(searchContainer);
         } else {
             mapDiv.classList.remove('map-fullscreen');
